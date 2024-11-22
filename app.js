@@ -83,7 +83,7 @@ function calculateCircleIntersections(p1, r1, p2, r2) {
 }
 
 // Display information
-function displayInfo(intersections) {
+function displayInfo(intersections = []) {
     const pointInfo = points.map((p, i) => `Point ${String.fromCharCode(65 + i)}: (${p.x.toFixed(1)}, ${p.y.toFixed(1)})`).join('<br>');
     const intersectionInfo = intersections.length
         ? intersections.map((pt, i) => `Intersection ${i + 1}: (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)})`).join('<br>')
@@ -91,6 +91,41 @@ function displayInfo(intersections) {
 
     infoDiv.innerHTML = `<strong>Points:</strong><br>${pointInfo}<br><strong>Intersections:</strong><br>${intersectionInfo}`;
 }
+
+// Add real-time coordinate preview
+const previewDiv = document.createElement('div');
+previewDiv.id = 'preview';
+document.body.appendChild(previewDiv);
+
+canvas.addEventListener('mousemove', (e) => {
+    const mousePos = { x: e.offsetX, y: e.offsetY };
+
+    // Show coordinates if less than 4 points are added
+    if (points.length < 4 && !draggingPoint) {
+        previewDiv.style.display = 'block';
+        previewDiv.style.left = `${e.pageX + 10}px`;
+        previewDiv.style.top = `${e.pageY + 10}px`;
+        previewDiv.textContent = `(${mousePos.x}, ${mousePos.y})`;
+    } else {
+        previewDiv.style.display = 'none';
+    }
+
+    if (draggingPoint) {
+        draggingPoint.x = mousePos.x;
+        draggingPoint.y = mousePos.y;
+
+        if (points.length === 4) {
+            circles[0].radius = distance(points[0], points[1]);
+            circles[1].radius = distance(points[2], points[3]);
+        }
+
+        render();
+    }
+});
+
+canvas.addEventListener('mouseout', () => {
+    previewDiv.style.display = 'none';
+});
 
 // Event: Add points on click
 canvas.addEventListener('mousedown', (e) => {
@@ -111,20 +146,7 @@ canvas.addEventListener('mousedown', (e) => {
         }
 
         render();
-    }
-});
-
-canvas.addEventListener('mousemove', (e) => {
-    if (draggingPoint) {
-        draggingPoint.x = e.offsetX;
-        draggingPoint.y = e.offsetY;
-
-        if (points.length === 4) {
-            circles[0].radius = distance(points[0], points[1]);
-            circles[1].radius = distance(points[2], points[3]);
-        }
-
-        render();
+        displayInfo(); // Display info immediately after adding a point
     }
 });
 
